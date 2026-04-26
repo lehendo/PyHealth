@@ -138,7 +138,12 @@ def _run_one_kde_cp(
     print(f"STEP 3: Train {model_name}" if not getattr(args, "tfm_skip_train", False) else f"STEP 3: Load {model_name} (skip train)")
     print("=" * 80)
     model = get_model(args, sample_dataset, device)
-    trainer = Trainer(model=model, device=device, enable_logging=False)
+    train_metrics = (
+        ["pr_auc", "roc_auc", "f1", "accuracy"] if task_mode == "binary" else None
+    )
+    trainer = Trainer(
+        model=model, device=device, enable_logging=False, metrics=train_metrics
+    )
     if not getattr(args, "tfm_skip_train", False):
         optimizer_params = None
         if args.model.lower() == "tfm" and (
