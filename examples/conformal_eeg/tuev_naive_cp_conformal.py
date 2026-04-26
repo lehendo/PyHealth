@@ -54,6 +54,7 @@ from pyhealth.tasks import EEGEventsTUEV, EEGAbnormalTUAB
 from pyhealth.trainer import Trainer, get_metrics_fn
 
 from model_utils import AddSTFTDataset, get_model
+from tuab_offline import tuab_offline_caches_available
 
 # Default roots when --root is not set (TUEV vs TUAB)
 DEFAULT_ROOT = {
@@ -235,7 +236,14 @@ def _run(args: argparse.Namespace) -> None:
         elif "events" in root_str or "tuev" in root_str:
             dataset_name = "tuev"
     if not root.exists():
-        raise FileNotFoundError(f"Dataset root not found: {root}. Set --root for {dataset_name}.")
+        if dataset_name == "tuab" and tuab_offline_caches_available(args):
+            print(
+                "Note: raw TUAB EDF path is missing; using ~/.cache/pyhealth/tuab metadata and "
+                "the sample cache (offline; no rebuild).",
+                flush=True,
+            )
+        else:
+            raise FileNotFoundError(f"Dataset root not found: {root}. Set --root for {dataset_name}.")
 
     if getattr(args, "model", "contrawr").lower() == "tfm":
         if not getattr(args, "tfm_tokenizer_checkpoint", None):
