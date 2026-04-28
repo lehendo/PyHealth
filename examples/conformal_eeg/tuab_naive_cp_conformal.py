@@ -3,7 +3,7 @@
 Same experiment harness as ``tuab_conventional_conformal.py`` (fixed TUH eval test set,
 train/val/cal from the train partition, multi-seed, ContraWR or TFM), but calibrates
 :class:`~pyhealth.calib.predictionset.base_conformal.BaseConformal` instead of LABEL —
-matching the naive split-CP baseline used in ``tuev_naive_cp_conformal.py`` on ``sidruns``.
+same naive split conformal baseline as other PyHealth ``BaseConformal`` examples.
 
 Single-seed usage (from repo root):
   python examples/conformal_eeg/tuab_naive_cp_conformal.py --root downloads/tuab/v3.0.0/edf
@@ -194,8 +194,8 @@ def _run_one_seed(
 ) -> dict:
     """Train model + calibrate BaseConformal for one seed across all alphas.
 
-    ContraWR training uses the same monitoring metrics as ``sidruns``
-    ``tuev_naive_cp_conformal`` for binary tasks (pr_auc, roc_auc, f1, accuracy).
+    ContraWR training matches ``tuab_conventional_conformal`` (plain Trainer;
+    validation uses default multiclass metrics when monitoring).
 
     Returns {alpha: metrics_dict} where metrics_dict has keys:
         accuracy, roc_auc_weighted_ovr, f1_weighted, coverage, miscoverage, avg_set_size
@@ -220,10 +220,7 @@ def _run_one_seed(
     else:
         model = ContraWR(dataset=sample_dataset, n_fft=args.n_fft).to(device)
         print("  Training ContraWR...")
-        train_metrics = ["pr_auc", "roc_auc", "f1", "accuracy"]
-        trainer_tmp = Trainer(
-            model=model, device=device, enable_logging=False, metrics=train_metrics
-        )
+        trainer_tmp = Trainer(model=model, device=device, enable_logging=False)
         trainer_tmp.train(
             train_dataloader=train_loader,
             val_dataloader=val_loader,
